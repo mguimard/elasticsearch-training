@@ -1,0 +1,389 @@
+# Infos basiques
+GET /
+
+# Liste des index
+GET _cat/indices?v
+
+# Création index par défaut
+PUT fruits
+
+# Détails indes
+GET fruits
+
+# Santé du cluster
+GET _cluster/health
+
+# Liste des machines du clister
+GET _cat/nodes?v
+
+# Liste des blocs
+GET _cat/shards?v
+
+# Affichage de la répartition de la charge
+GET _cat/allocation?v
+
+
+------
+
+GET _analyze?filter_path=**.token
+{
+  "text" : "Hello ElasticSearch ! I love pizzas"
+}
+
+PUT blog/_doc/1
+{
+  "title" : "Hello ElasticSearch !"
+}
+
+GET blog/_source/1
+
+GET blog/_search
+{
+  "query": {
+    "match": {
+      "title": "HeLLO what the fuck"
+    }
+  }
+}
+
+
+GET bank/_search
+
+# source:  firstname: Amber
+# index:   firstname: amber
+# index:   firstname.keyword: Amber
+
+# match = analyse de la recherche
+GET bank/_search
+{
+  "query": {
+    "match": {
+      "firstname": "AMBER"
+    }
+  }
+}
+
+GET bank/_search
+{
+  "query": {
+    "term": {
+      "firstname": {
+        "value": "AMBER"
+      }
+    }
+  }
+}
+
+# source: gender: F
+# index:  gender: f
+# index:  gender.keyword: F
+
+# match = analyse, term = pas d'analyse
+GET bank/_search
+{
+  "query": {
+    "term": {
+      "gender": {
+        "value": "f"
+      }
+    }
+  }
+}
+
+GET _analyze?filter_path=**.token
+{
+  "text" : "Salut la StreET"
+}
+
+GET bank/_search
+{
+  "query": {
+    "match": {
+      "address": "671 Bristol Street, holmes lane"
+    }
+  }
+}
+
+GET bank/_search
+{
+  "query": {
+    "term": {
+      "address.keyword": {
+        "value": "671 Bristol Street"
+      }
+    }
+  }
+}
+
+GET bank/_search
+{
+  "query": {
+    "wildcard": {
+      "address.keyword": {
+        "value": "* Bristol Street"
+      }
+    }
+  }
+}
+
+GET bank/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "address": "briStOL"
+          }
+        },
+        {
+          "match": {
+            "address": "STrEET"
+          }
+        }
+      ],
+      "minimum_should_match": 2
+    }
+  }
+}
+
+GET bank/_search
+{
+  "query": {
+    "regexp": {
+      "address.keyword": {
+        "value":"[0-9]+ bristol streeT",
+        "flags": "ALL",
+        "case_insensitive":true
+      }
+    }
+  }
+}
+
+# "address.keyword": "^[0-9]+ bristol streeT$",
+
+GET _analyze?filter_path=**.token&format=yaml
+{
+  "text" : "boulettes",
+  "analyzer": "french"
+}
+
+DELETE pizzas
+
+POST pizzas/_doc
+{
+    "name" : "Saumon",
+    "price" : 10,
+    "release-date": "2025-06-02T08:00:00"
+}
+
+POST pizzas/_doc
+{
+    "name" : "Chorizo",
+    "price" : 10.50,
+    "release-date": "2025-06-02T08:00:00"
+}
+
+GET pizzas/_count
+GET pizzas/_mapping
+
+GET pizzas2/_search
+{
+  "query": {
+    "term": {
+      "price": {
+        "value": 10.5
+      }
+    }
+  }
+}
+
+
+GET pizzas/_mapping
+
+# chasse au dynamic mapping
+GET */_mapping
+
+
+# création nouvel index corrigé
+PUT pizzas2
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type" : "text"
+      },
+      "price" : {
+        "type": "double"
+      },
+      "release-date" : {
+        "type" : "date"
+      }
+    }
+  }
+}
+
+POST _reindex
+{
+  "source": {
+    "index" : "pizzas"
+  },
+  "dest": {
+    "index" : "pizzas2"
+  }
+}
+
+
+
+GET bank/_search
+{
+  "query": {
+    "script": {
+      "script": """ 
+          if(doc['city.keyword'].value == 'Keller'){
+            return false;
+          }
+          
+         return doc['state.keyword'].value == 'TX' && doc['age'].value > 30
+        """
+    }
+  }
+}
+
+# bool queries
+POST web/_doc
+{
+  "title" : "J'aime le Java",
+  "category" : "dev",
+  "published" : "2025-06-02T08:00:00",
+  "ads" : false
+}
+
+POST web/_doc
+{
+  "title" : "Découvrez l'ile de Java et ses superbes plages",
+  "category" : "voyage",
+  "published" : "2025-05-02T08:00:00",
+  "ads" : true
+}
+
+POST web/_doc
+{
+  "title" : "Il fait un peu trop la Java et ça se passe mal, cliquez ici pour voir la suite",
+  "category" : "dumb",
+  "published" : "2025-04-02T08:00:00",
+  "ads" : true
+}
+
+GET web/_search
+{
+  "query": {
+    "match": {
+      "title": "JAVA"
+    }
+  }
+}
+
+GET web/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "JAVA"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+GET web/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "JAVA"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term" : {
+            "category": {
+              "value": "voyage",
+              "boost": 3
+            }
+          }
+        },
+        {
+          "term" : {
+            "category": {
+              "value": "dumb",
+              "boost": 1
+            }
+          }
+        },
+        {
+          "term": {
+            "ads": {
+              "value": true,
+              "boost": 0.5
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "published": {
+              "gte": "2025-05-01"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
