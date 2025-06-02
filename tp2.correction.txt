@@ -1,0 +1,180 @@
+GET bank
+
+# text = searchable
+# keyword = searchable, sortable, aggregatable
+
+PUT bank2
+{
+    "settings": {
+        "index.number_of_shards": 1,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic" : false,
+        "properties": {
+            "account_number" : {
+                "type" : "unsigned_long"
+            },
+            "address" : {
+                "type" : "text"
+            },
+            "age" : {
+                "type" : "unsigned_long"
+            },
+            "balance" : {
+                "type" : "double"
+            },
+            "city" : {
+                "type" : "keyword"
+            },
+            "email" : {
+                "type" : "text"
+            },
+            "employer"  :{
+                "type" : "keyword"
+            },
+            "firstname" : {
+                "type" : "keyword"
+            },
+            "lastname" : {
+                "type" : "keyword"
+            },
+            "gender" : {
+                "type": "keyword"
+            },
+            "state" : {
+                "type" : "keyword"
+            }
+        }
+    }
+}
+
+GET bank/_count
+GET bank2/_count
+GET _cat/indices/bank*?v&h=index,docs.count,store.size
+
+GET bank2/_search
+{
+  "query": {
+    "term": {
+      "firstname": {
+        "value": "Rose"
+      }
+    }
+  }
+}
+
+GET bank2/_search
+{
+  "query": {
+    "match": {
+      "address": "yo la StreET"
+    }
+  }
+}
+
+GET bank2/_search
+{
+  "query": {
+    "range": {
+      "age": {
+        "gte": 25,
+        "lte": 35
+      }
+    }
+  }
+}
+
+GET bank2/_search
+{
+  "query": {
+    "fuzzy": {
+      "firstname": {
+        "value": "Rose"
+      }
+    }
+  }
+}
+
+GET bank2/_search
+{
+  "query": {
+    "prefix": {
+      "firstname": {
+        "value": "r",
+        "case_insensitive" : true
+      }
+    }
+  }
+}
+
+GET bank2/_search
+{
+  "query": {
+    "wildcard": {
+      "firstname": {
+        "value": "*e*",
+        "case_insensitive": true
+      }
+    }
+  }
+}
+
+# Rechercher les comptes dont l'age est inférieur à 25 ans et le compte en banque supérieur à 25000.
+# Bonus : booster le score des comptes dont le genre est féminin
+GET bank2/_search?size=1000
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "age": {
+              "lt": 25
+            }
+          }
+        },
+        {
+          "range": {
+            "balance": {
+              "gt": 25000
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "gender": {
+              "value": "F"
+            }
+          }
+        },
+        {
+          "match": {
+            "address": "place"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
