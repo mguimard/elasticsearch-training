@@ -55,8 +55,9 @@ PUT sncf/_mapping
         "script": {
           "source": """
           if( doc['Nombre_observations'].size()!=0 && doc['Nombre_Non_Conformites'].size() != 0 && doc['Nombre_observations'].value > 0 && doc['Nombre_Non_Conformites'].value > 0)
- emit(1.0* doc['Nombre_Non_Conformites'].value / doc['Nombre_observations'].value);
-          emit(0)
+            emit(1.0* doc['Nombre_Non_Conformites'].value / doc['Nombre_observations'].value);
+          else
+            emit(0);
           """
         }
       },
