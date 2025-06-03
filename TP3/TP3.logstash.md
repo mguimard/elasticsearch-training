@@ -46,6 +46,7 @@ Afficher l'évolution du nombre d'observations
 Ajouter ces champs au mapping: 
 
 ```
+
 PUT sncf/_mapping
 {
   "runtime": {
@@ -53,13 +54,31 @@ PUT sncf/_mapping
         "type": "double",
         "script": {
           "source": """
-
           if( doc['Nombre_observations'].size()!=0 && doc['Nombre_Non_Conformites'].size() != 0 && doc['Nombre_observations'].value > 0 && doc['Nombre_Non_Conformites'].value > 0)
  emit(1.0* doc['Nombre_Non_Conformites'].value / doc['Nombre_observations'].value);
-
           emit(0)
-
-
+          """
+        }
+      },
+      "hour_of_day": {
+        "type": "double",
+        "script": {
+          "source": """
+          if(doc['Fin_controle'].size()!=0 )
+            emit(doc['Fin_controle'].value.getHour());
+          else
+            emit(0);
+          """
+        }
+      },
+      "day_of_week": {
+        "type": "keyword",
+        "script": {
+          "source": """
+          if(doc['Fin_controle'].size() == 0)
+            emit('NA');
+          else
+          emit(doc['Fin_controle'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT));
           """
         }
       }
