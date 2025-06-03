@@ -1,0 +1,221 @@
+DELETE voitures
+
+PUT voitures
+{
+  "mappings": {
+    "dynamic" : "false",
+    "properties": {
+      "marque": {
+        "type": "keyword"
+      },
+      "modele": {
+        "type": "keyword"
+      },
+      "puissance": {
+        "type": "unsigned_long"
+      }
+    }
+  }
+}
+
+PUT _ingest/pipeline/my-pipeline
+{
+  "description":"Parsing de csv",
+  "processors": [
+    {
+      "csv": {
+        "field": "message",
+        "separator": ";",
+        "target_fields": [
+          "marque","modele","puissance"
+        ]
+      }
+    },
+    {
+      "remove": {
+        "field": "message"
+      }
+    },
+    {
+      "convert": {
+        "field": "puissance",
+        "type": "integer"
+      }
+    }
+  ]  
+}
+
+POST voitures/_doc?pipeline=my-pipeline
+{
+  "data": "renault;twingo;5"
+}
+
+GET voitures/_source/GU-uNJcBHDNfhax1En2y
+
+
+# simulation sans stocker la pipeline
+POST _ingest/pipeline/_simulate
+{
+  "pipeline": {
+    "processors": [
+      {
+        "csv": {
+          "field": "data",
+          "separator": ";",
+          "target_fields": [
+            "marque","modele","puissance"
+          ],
+          "on_failure": [
+            {
+              "set" : {
+                "field": "error",
+                "value" : "ooops y'a un probleme dans {{ _ingest.on_failure_processor_type }}: {{ _ingest.on_failure_message }}"
+              }
+            },
+            {
+              "set" : {
+                "field" : "_index",
+                "value" : "errors-{{ _index }}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "docs": [
+    {
+      "_source" : {
+        "whatever" : "A"
+      }
+    },
+    {
+      "_source" : {
+        "data" : "tesla;blala;7"
+      }
+    }
+  ]
+}
+
+
+# GROK
+
+POST _ingest/pipeline/_simulate
+{
+  "pipeline": {
+    "processors": [
+      {
+        "grok": {
+          "field": "message",
+          "patterns": [
+            "%{IP:mon-ip}%{SPACE}%{WORD:mot-1}%{SPACE}%{WORD:mot-2}%{SPACE}%{NUMBER:mon-number}",            
+            "%{IP:mon-ip}%{SPACE}%{DATA:phrase-1}%{SPACE}%{NUMBER:mon-number}",
+            "%{IP:mon-ip}%{SPACE}%{NUMBER:mon-number}%{SPACE}%{WORD:mot-1}",
+            "%{IP:mon-ip}%{SPACE}%{WORD:mot-1}"
+          ]
+        }
+      },
+      {
+        "convert": {
+          "field": "mon-number",
+          "type": "integer",
+          "if": "ctx.containsKey('mon-number')"
+        }
+      }
+    ],
+    "on_failure":[
+      {
+        "set" : {
+          "field" : "_index",
+          "value" : "errors-{{ _index }}"
+        }
+      }
+    ]
+  },
+  "docs": [
+    {
+      "_source" : {
+        "message" : "127.0.0.1 Hello World 123456"
+      }
+    },{
+      "_source" : {
+        "message" : "127.0.0.1 Hello World this is super cool 123456"
+      }
+    },
+     {
+      "_source" : {
+        "message" : "127.0.0.1 123456 Hello"
+      }
+    },{
+      "_source" : {
+        "message" : "127.0.0.1 Hello"
+      }
+    },
+     {
+      "_source" : {
+        "message" : "chaine non valide"
+      }
+    }
+  ]
+}
+
+
+
+
+GET un-super-index/_search
+
+
+
+POST data/_doc
+{
+  "a": 4
+}
+
+PUT data/_mappings
+{
+  "runtime" : {
+    "a-plus-b" : {
+      "type" : "double",
+      "script" : {
+        "source": """
+          if(doc['a'].size() == 0) {
+            emit(0);
+          }
+          else if(doc['b'].size() == 0) {
+            emit(42);
+          }
+          else {         
+            emit(doc['a'].value + doc['b'].value);         
+          }          
+          """
+      }
+    }
+  }
+}
+
+PUT testbyte
+{
+  "mappings": {
+    "properties": {
+      "b" : {
+        "type": "byte"
+      }
+    }
+  }
+}
+POST testbyte/_doc
+{
+  "b" : "99"
+}
+GET testbyte/_search?q=b:99
+
+# termvectors
+# voir les données indexées (strings seulement)
+GET bank/_termvectors/1?fields=address
+GET <index>/_termvectors/<document id>?fields=<nom_du_champ>
+
+
+
+
+
+
