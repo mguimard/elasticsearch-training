@@ -5,7 +5,7 @@ PUT sncf
       "Fin_controle": {
         "type": "date"
       },
-      "Gare": {
+      "Nom_Gare": {
         "type": "completion",
         "fields": {
           "keyword": {
@@ -18,7 +18,7 @@ PUT sncf
         "type": "keyword"
       },
       "Nombre_Non_Conformites": {
-        "type": "short"
+        "type": "integer"
       },
       "Nombre_observations": {
         "type": "integer"
