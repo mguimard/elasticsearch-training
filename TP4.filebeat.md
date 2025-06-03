@@ -23,14 +23,14 @@ output.elasticsearch:
 
 Activer le module apache
 
-```
+```bash
 ./filebeat modules enable apache
 ```
 
 Configurer le module apache 
 
-```
-// fichier : modules.d/apache.yml
+```yaml
+# fichier : modules.d/apache.yml
 - module: apache
   access:
     enabled: true
@@ -45,7 +45,7 @@ Configurer le module apache
 
 Lancer la génération des dashboards et pipelines
 
-```
+```bash
 ./filebeat setup dashboards
 ```
 
@@ -55,7 +55,7 @@ Activer le monitoring dans Kibana -> stack monitoring. Repérer les différents 
 
 Lancer ensuite l'ingestion des données :
 
-```
+```bash
 ./filebeat
 ```
 Monitorer l'ingestion (plusieurs millions de lignes).
